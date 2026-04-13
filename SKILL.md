@@ -103,13 +103,15 @@ CHECK the exit code of the pipeline (`$?`):
   WEB_LOGIN_URL=$(echo "$CONNECT_OUT" | grep '^WEB_LOGIN_URL=' | cut -d= -f2- | tr -d '\r\n')
   ```
 
-  If `$WEB_LOGIN_URL` is non-empty, SAY (substitute the URL literally — no backticks, no code block):
-  > Done — I'm connected to your Todo4 account and the MCP tools are ready.
-  >
-  > Open your tasks in the browser — you'll be signed in automatically (link is single-use, valid for 5 minutes):
-  > <WEB_LOGIN_URL>
-  >
-  > Or just tell me to create your first task — e.g., "Create a task to review the Q2 report by Friday."
+  If `$WEB_LOGIN_URL` is non-empty, send the following as **three separate messages** — one per bullet, flushed individually so the user sees three distinct chat bubbles. Do NOT combine them into one message.
+
+  1. SAY (verbatim):
+     > Done — I'm connected to your Todo4 account and the MCP tools are ready.
+  2. SAY (substitute the URL literally — no backticks, no code block):
+     > Open your tasks in the browser — you'll be signed in automatically (link is single-use, valid for 5 minutes):
+     > <WEB_LOGIN_URL>
+  3. SAY (verbatim):
+     > Or just tell me to create your first task — e.g., "Create a task to review the Q2 report by Friday."
 
   If `$WEB_LOGIN_URL` is empty, SAY (verbatim):
   > Done — I'm connected to your Todo4 account and the MCP tools are ready. Try: "Create a task to review the Q2 report by Friday."
