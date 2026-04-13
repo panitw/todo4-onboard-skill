@@ -69,7 +69,7 @@ CHECK exit code:
 
 Extract the 6 digits from the user's reply as `<code>`.
 
-RUN this exact command — it captures the access token into a shell variable so you never have to see it:
+**CRITICAL: Call `verify.sh` EXACTLY ONCE per code.** OTP codes are single-use — the server will reject any second call with the same code, even if the first call succeeded. Do NOT run `verify.sh` to "peek" at the output first and then again to capture. Run only the single command below, exactly once:
 
 ```bash
 ACCESS_TOKEN=$(scripts/verify.sh <email> <code> | jq -r '.accessToken')
@@ -77,8 +77,8 @@ ACCESS_TOKEN=$(scripts/verify.sh <email> <code> | jq -r '.accessToken')
 
 CHECK the exit code of the pipeline (`$?`):
 
-- `0` and `$ACCESS_TOKEN` is non-empty → SAY: "Email verified. Connecting myself as your agent…" and go to STEP 4.
-- `2` → SAY: "That code didn't work. Please double-check and try again." WAIT for a new code and repeat STEP 3. After 3 failures, SAY: "Let me send you a new code." and go back to STEP 2.
+- `0` and `$ACCESS_TOKEN` is non-empty → SAY: "Email verified. Connecting myself as your agent…" and go to STEP 4. **Do not re-run `verify.sh`.** `$ACCESS_TOKEN` is already captured; proceed directly to STEP 4.
+- `2` → SAY: "That code didn't work. Please double-check and try again." WAIT for a new code and repeat STEP 3 with the new code. After 3 failures, SAY: "Let me send you a new code." and go back to STEP 2.
 - `1` → SAY: "I couldn't reach the Todo4 server. Please check your connection and try again." STOP.
 
 Never echo `$ACCESS_TOKEN` or the script's JSON output.
