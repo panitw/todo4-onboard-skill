@@ -1,6 +1,6 @@
 ---
 name: todo4-onboard
-description: "Create a Todo4 account and connect your agent — entirely from chat. No website, no password."
+description: "Sign up for Todo4 and connect this agent via MCP. Use whenever the user says things like 'set me up with Todo4', 'sign me up for Todo4', 'install Todo4', 'connect Todo4', 'get started with Todo4', 'I want to use Todo4', 'onboard me to Todo4', or any similar request to create a Todo4 account or start using Todo4. Creates the account via email OTP and wires up the MCP connection — no browser, no password."
 metadata:
   openclaw:
     bins: [curl, jq]
@@ -8,107 +8,109 @@ metadata:
 
 # Todo4 Onboarding Skill
 
-Set up a Todo4 account, verify the user's email, and connect this agent — all within the conversation. The user never leaves chat.
+This is a fixed 4-step procedure. Follow it exactly, in order, one step at a time. Do not improvise, summarize, or skip steps.
 
-## Before You Start
+## When to run this skill
 
-Tell the user:
+Run this whole procedure, starting at STEP 1, whenever the user asks to sign up for, install, connect, onboard, or start using Todo4. Examples of triggering requests:
 
-> I'll help you create a Todo4 account. I'll need your email address and will send a verification code to confirm it.
+- "Set me up with Todo4"
+- "Sign me up for Todo4"
+- "Install Todo4" / "Connect Todo4"
+- "Get started with Todo4"
+- "I want to use Todo4"
+- "Onboard me to Todo4"
 
-## Onboarding Flow
+## DO NOT
 
-Follow these steps **in order**, asking **one question at a time**. Wait for the user's response before proceeding.
+- DO NOT explain what Todo4 is, list features, or ask "are you sure?" — just start STEP 1.
+- DO NOT ask for more than one piece of information per message.
+- DO NOT skip or combine steps.
+- DO NOT continue past a failed step until the error is resolved.
+- DO NOT echo the verification code, any token, or raw script JSON back to the user.
 
-### Step 1: Collect Email
+---
 
-Ask:
+## STEP 1 — Ask for email
 
-> What email address would you like to use for your Todo4 account?
+SAY (verbatim):
 
-Wait for the user to provide their email. Validate that it looks like an email address (contains `@` and a `.` after the `@`). If invalid, say:
+> I'll set you up with Todo4. I just need your email so I can send a verification code. What email should I use?
 
-> That doesn't look like a valid email. Could you try again?
+WAIT for the user's reply.
 
-If the user mentions they already have an account, say:
+CHECK the reply contains "@" and a "." after the "@". If not, SAY: "That doesn't look like a valid email — could you try again?" and WAIT again.
 
-> Looks like you already have a Todo4 account with that email! Let me connect to it instead.
+Store the valid email as `<email>` and go to STEP 2.
 
-Then proceed with the same flow below — the API handles existing accounts automatically.
+---
 
-### Step 2: Request Verification Code
+## STEP 2 — Send verification code
 
-Run the registration script:
+RUN:
 
 ```bash
 scripts/register.sh <email>
 ```
 
-**On success** (exit code 0), say:
+CHECK exit code:
 
-> I've sent a 6-digit verification code to **[email]**. Please check your inbox and paste the code here.
+- `0` → SAY (verbatim):
+  > I've sent a 6-digit verification code to **<email>**. Please paste it here when it arrives.
 
-**On error**, see [Error Handling](#error-handling) below.
+  Then WAIT for the code and go to STEP 3.
+- `2` and the error mentions HTTP 429 → SAY: "We've hit a rate limit. Please wait a moment and try again." STOP.
+- `2` otherwise → SAY: "That email was rejected. Could you try another one?" Go back to STEP 1.
+- `1` → SAY: "I couldn't reach the Todo4 server. Please check your connection and try again." STOP.
 
-### Step 3: Verify Code
+---
 
-When the user provides the code, run:
+## STEP 3 — Verify the code
 
-```bash
-scripts/verify.sh <email> <code>
-```
+Extract the 6 digits from the user's reply as `<code>`.
 
-**On success** (exit code 0), the script outputs JSON with `accessToken` and `refreshToken`. Save the `accessToken` value — you'll need it for the next step. Say:
-
-> Email verified! Your Todo4 account is ready. Let me connect myself as your agent...
-
-**On error**, see [Error Handling](#error-handling) below.
-
-### Step 4: Connect Agent
-
-Run the connection script with the access token from Step 3 and your agent name:
+RUN this exact command — it captures the access token into a shell variable so you never have to see it:
 
 ```bash
-scripts/connect.sh <accessToken> <your_agent_name>
+ACCESS_TOKEN=$(scripts/verify.sh <email> <code> | jq -r '.accessToken')
 ```
 
-Use your actual agent name (e.g., "Claude", "My Assistant") so the user can identify which agent is connected in their Todo4 dashboard. If omitted, defaults to "OpenClaw".
+CHECK the exit code of the pipeline (`$?`):
 
-**On success** (exit code 0), the script automatically:
-- Writes the MCP config to `~/.openclaw/mcp_config.json`
-- Stores the agent token in `~/.openclaw/.env`
+- `0` and `$ACCESS_TOKEN` is non-empty → SAY: "Email verified. Connecting myself as your agent…" and go to STEP 4.
+- `2` → SAY: "That code didn't work. Please double-check and try again." WAIT for a new code and repeat STEP 3. After 3 failures, SAY: "Let me send you a new code." and go back to STEP 2.
+- `1` → SAY: "I couldn't reach the Todo4 server. Please check your connection and try again." STOP.
 
-Say:
+Never echo `$ACCESS_TOKEN` or the script's JSON output.
 
-> Done! I'm now connected to your Todo4 account as your AI agent. Your MCP tools are ready to use.
+---
 
-### Step 5: First Task
+## STEP 4 — Connect this agent
 
-Prompt the user to try out the connection:
+Pick `<agent_name>` — use your own assistant name (e.g., "Claude", "GPT", "Gemini"). If unknown, use "OpenClaw".
 
-> Try asking me to create a task — like "Create a task to review the Q2 report by Friday"
+RUN:
 
-After the user's first task request, use the Todo4 MCP tools (e.g., `create_task`) to handle it. This confirms the connection is working.
+```bash
+scripts/connect.sh "$ACCESS_TOKEN" <agent_name>
+```
 
-## Error Handling
+CHECK exit code:
 
-Handle these situations during the onboarding flow:
+- `0` → the script wrote the MCP config and agent token automatically. SAY (verbatim):
+  > Done — I'm connected to your Todo4 account and the MCP tools are ready. Try: "Create a task to review the Q2 report by Friday."
 
-| Situation | Script Exit Code | What to Say |
-|-----------|-----------------|-------------|
-| Invalid email format | register.sh exits 2 (validation error) | "That doesn't look like a valid email. Could you try again?" |
-| User didn't receive code | User says so | "Didn't get the code? I can send it again." Then re-run `scripts/register.sh <email>`. |
-| Wrong verification code | verify.sh exits 2 (invalid_or_expired_code) | "That code didn't work. Please double-check and try again." |
-| Too many failed attempts | verify.sh exits 2 after multiple tries | "Too many attempts. Let me send a new code." Then re-run `scripts/register.sh <email>`. |
-| Rate limited | Any script exits 2 (HTTP 429) | "We've hit a rate limit. Please wait a moment and try again." |
-| Agent quota exceeded | connect.sh exits 2 (HTTP 422) | "Your account has reached the maximum number of connected agents. You can manage your agents at todo4.io." |
-| Network/server error | Any script exits 1 | "I couldn't reach the Todo4 server. Please check your internet connection and try again." |
+  Then WAIT for the user's first task request. When it arrives, use the Todo4 MCP tools (e.g., `create_task`) to fulfill it.
+- `2` with HTTP 422 → SAY: "Your account has reached the maximum number of connected agents. You can manage them at todo4.io." STOP.
+- `2` otherwise → SAY: "Connection failed. Let me try again from the start." Go back to STEP 1.
+- `1` → SAY: "I couldn't reach the Todo4 server. Please check your connection and try again." STOP.
 
-## Security Rules
+Never print `$ACCESS_TOKEN`, the agent token, or the MCP config contents.
 
-**You MUST follow these rules during the onboarding flow:**
+---
 
-- **Never echo back** the full OTP verification code in your messages. If you need to reference it, say "the code you entered" — not the actual digits.
-- **Never display** the access token, refresh token, or agent token in the conversation. These are handled by the scripts internally.
-- **Never log or display** the full `mcpConfigSnippet` contents — it contains a bearer token.
-- If a script fails with unexpected output, summarize the error message for the user without quoting raw JSON responses that may contain sensitive fields.
+## Security rules (apply to every step)
+
+- NEVER echo the OTP verification code back to the user. If you must reference it, say "the code you entered."
+- NEVER display the access token, refresh token, agent token, or MCP config contents.
+- If a script produces unexpected output, summarize the problem in plain English — do not quote raw JSON that may contain secrets.
