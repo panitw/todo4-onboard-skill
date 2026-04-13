@@ -97,6 +97,15 @@ fi
 echo "TODO4_AGENT_TOKEN=${AGENT_TOKEN}" >> "$ENV_FILE"
 
 # ── Output success ───────────────────────────────────────────────────────────
+#
+# Emit the one-time web login URL (if the API included it) so the skill can
+# offer the user a click-through link that lands in the authenticated web app.
+# The URL is a 5-minute, single-use auth code — safe to display in chat once.
+# Full response body is intentionally NOT echoed (would leak the agent token).
 
-echo "$BODY" | jq .
+WEB_LOGIN_URL=$(echo "$BODY" | jq -r '.data.webLoginUrl // empty')
+if [ -n "$WEB_LOGIN_URL" ]; then
+  echo "WEB_LOGIN_URL=${WEB_LOGIN_URL}"
+fi
+
 exit 0

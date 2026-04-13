@@ -89,15 +89,29 @@ Never echo `$ACCESS_TOKEN` or the script's JSON output.
 
 Pick `<agent_name>` — use your own assistant name (e.g., "Claude", "GPT", "Gemini"). If unknown, use "OpenClaw".
 
-RUN:
+RUN this exact command — it captures the script's stdout so you can extract the one-time web login link:
 
 ```bash
-scripts/connect.sh "$ACCESS_TOKEN" <agent_name>
+CONNECT_OUT=$(scripts/connect.sh "$ACCESS_TOKEN" <agent_name>)
 ```
 
-CHECK exit code:
+CHECK the exit code of the pipeline (`$?`):
 
-- `0` → the script wrote the MCP config and agent token automatically. SAY (verbatim):
+- `0` → the script wrote the MCP config and agent token automatically. Extract the one-time web login URL:
+
+  ```bash
+  WEB_LOGIN_URL=$(echo "$CONNECT_OUT" | grep '^WEB_LOGIN_URL=' | cut -d= -f2- | tr -d '\r\n')
+  ```
+
+  If `$WEB_LOGIN_URL` is non-empty, SAY (substitute the URL literally — no backticks, no code block):
+  > Done — I'm connected to your Todo4 account and the MCP tools are ready.
+  >
+  > Open your tasks in the browser — you'll be signed in automatically (link is single-use, valid for 5 minutes):
+  > <WEB_LOGIN_URL>
+  >
+  > Or just tell me to create your first task — e.g., "Create a task to review the Q2 report by Friday."
+
+  If `$WEB_LOGIN_URL` is empty, SAY (verbatim):
   > Done — I'm connected to your Todo4 account and the MCP tools are ready. Try: "Create a task to review the Q2 report by Friday."
 
   Then WAIT for the user's first task request. When it arrives, use the Todo4 MCP tools (e.g., `create_task`) to fulfill it.
@@ -105,7 +119,7 @@ CHECK exit code:
 - `2` otherwise → SAY: "Connection failed. Let me try again from the start." Go back to STEP 1.
 - `1` → SAY: "I couldn't reach the Todo4 server. Please check your connection and try again." STOP.
 
-Never print `$ACCESS_TOKEN`, the agent token, or the MCP config contents.
+Never print `$ACCESS_TOKEN`, the agent token, or the MCP config contents. The `$WEB_LOGIN_URL` is safe to display once (single-use, 5-minute expiry).
 
 ---
 
