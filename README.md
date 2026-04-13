@@ -101,7 +101,7 @@ Verify the SKILL.md file has not been tampered with:
 
 | File | SHA-256 |
 |------|---------|
-| SKILL.md | `e157f598f0e244203bd64e108205f00200574c0bb5130957e68bce323f4b9898` |
+| SKILL.md | `138d4c618ba4deb40eb74a364dfdf17c438617e984b039bc290a996b58da2907` |
 
 ```bash
 shasum -a 256 SKILL.md

@@ -10,6 +10,12 @@ metadata:
 
 This is a fixed 4-step procedure. Follow it exactly, in order, one step at a time. Do not improvise, summarize, or skip steps.
 
+## Language
+
+Reply in the user's language. Detect it from their messages — if they write in Thai, reply in Thai; Japanese, reply in Japanese; and so on. Default to English only if the language is unclear.
+
+The SAY lines in each step are reference wording in English. Translate them into the user's language while preserving the meaning, the information requested, and any placeholders (e.g., `<email>`, `<WEB_LOGIN_URL>`). Do NOT translate: command output, URLs, tokens, or the literal bash scripts.
+
 ## When to run this skill
 
 Run this whole procedure, starting at STEP 1, whenever the user asks to sign up for, install, connect, onboard, or start using Todo4. Examples of triggering requests:
