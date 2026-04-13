@@ -26,7 +26,7 @@ Already have the skill installed? Just say:
 Paste the GitHub URL into your OpenClaw conversation:
 
 ```
-https://github.com/todo4/openclaw-onboard
+https://github.com/panitw/todo4-onboard-skill
 ```
 
 OpenClaw auto-installs the skill and makes it available immediately.
@@ -45,8 +45,16 @@ Open **Settings > Skills** in OpenClaw and search for `todo4-onboard`.
 
 ### Terminal (Manual)
 
+Install from ClawHub ([panitw/todo4-onboard](https://clawhub.ai/panitw/todo4-onboard)) using the native OpenClaw CLI:
+
 ```bash
-openclaw install @todo4/onboard
+openclaw skills install panitw/todo4-onboard
+```
+
+Or using the ClawHub CLI:
+
+```bash
+clawhub install panitw/todo4-onboard
 ```
 
 ## Requirements
