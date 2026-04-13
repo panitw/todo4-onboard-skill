@@ -18,7 +18,7 @@ fi
 
 ACCESS_TOKEN="$1"
 AGENT_NAME="${2:-OpenClaw}"
-API_URL="${TODO4_API_URL:-https://todo4.io/api/v1}"
+API_URL="https://todo4.io/api/v1"
 
 JSON_BODY=$(jq -n --arg name "$AGENT_NAME" '{"agentName": $name, "agentPlatform": "openclaw"}')
 

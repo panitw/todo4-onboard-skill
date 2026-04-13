@@ -13,7 +13,7 @@ fi
 
 EMAIL="$1"
 CODE="$2"
-API_URL="${TODO4_API_URL:-https://todo4.io/api/v1}"
+API_URL="https://todo4.io/api/v1"
 
 # Temporary cookie jar — cleaned up on exit (even on error)
 COOKIE_JAR=$(mktemp)

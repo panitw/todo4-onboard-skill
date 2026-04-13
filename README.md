@@ -56,12 +56,6 @@ openclaw install @todo4/onboard
 
 Both are declared in the skill metadata and checked by OpenClaw at load time.
 
-## Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `TODO4_API_URL` | No | `https://todo4.io/api/v1` | Todo4 API base URL |
-
 ## Security
 
 This skill is published by the **official Todo4 team** (Panit Wechasil). Published on ClawHub at [panitw/todo4-onboard](https://clawhub.ai/panitw/todo4-onboard).

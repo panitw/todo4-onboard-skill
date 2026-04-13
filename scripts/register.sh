@@ -11,7 +11,7 @@ if [ $# -lt 1 ]; then
 fi
 
 EMAIL="$1"
-API_URL="${TODO4_API_URL:-https://todo4.io/api/v1}"
+API_URL="https://todo4.io/api/v1"
 
 JSON_BODY=$(jq -n --arg email "$EMAIL" '{"email": $email}')
 
